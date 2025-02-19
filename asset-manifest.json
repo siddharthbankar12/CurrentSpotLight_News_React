@@ -1,0 +1,14 @@
+{
+  "files": {
+    "main.css": "/CurrentSpotLight_News_React/static/css/main.31d6cfe0.css",
+    "main.js": "/CurrentSpotLight_News_React/static/js/main.13803d8c.js",
+    "static/js/453.e5b00392.chunk.js": "/CurrentSpotLight_News_React/static/js/453.e5b00392.chunk.js",
+    "index.html": "/CurrentSpotLight_News_React/index.html",
+    "main.13803d8c.js.map": "/CurrentSpotLight_News_React/static/js/main.13803d8c.js.map",
+    "453.e5b00392.chunk.js.map": "/CurrentSpotLight_News_React/static/js/453.e5b00392.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.31d6cfe0.css",
+    "static/js/main.13803d8c.js"
+  ]
+}

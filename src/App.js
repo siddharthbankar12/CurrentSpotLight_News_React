@@ -5,7 +5,7 @@ import { HashRouter as Router, Route, Routes } from "react-router-dom";
 import LoadingBar from "react-top-loading-bar";
 
 const App = () => {
-  const country = "us";
+  const country = "in";
   const pageSize = 6;
   const apiKey = "bafbeb9bbc09c3dd61ca1edacaa498e2";
   const [progress, setProgress] = useState(0);

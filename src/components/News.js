@@ -47,11 +47,12 @@ const News = ({
         page + 1
       }&pageSize=${pageSize}`;
       setPage(page + 1);
-      let data = await fetch(url);
 
-      if (!data.ok) throw new Error(`HTTP error! Status: ${data.status}`);
+      let response = await fetch(url);
 
-      let parsedData = await data.json();
+      if (!response.ok) throw new Error(`API Error: ${response.status}`);
+
+      let parsedData = await response.json();
 
       if (!parsedData.articles)
         throw new Error("No articles received from API");
@@ -59,7 +60,8 @@ const News = ({
       setArticles((prevArticles) => [...prevArticles, ...parsedData.articles]);
       setTotalResults(parsedData.totalResults);
     } catch (error) {
-      console.error("Error fetching more data:", error);
+      console.error("Error fetching data:", error);
+      setArticles([]); // Prevents crash when articles are undefined
     }
   };
 

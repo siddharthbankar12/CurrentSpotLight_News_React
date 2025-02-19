@@ -22,46 +22,51 @@ const News = ({
 
   const updateNews = async () => {
     setProgress(10);
-    const url = `https://newsapi.org/v2/top-headlines?country=${country}&category=${category}&apiKey=${apiKey}&page=${page}&pageSize=${pageSize}`;
+    const url = `https://gnews.io/api/v4/top-headlines?category=${category}&lang=en&country=${country}&max=${pageSize}&apikey=${apiKey}`;
     console.log(url);
+
     setLoading(true);
-    let data = await fetch(url);
-    setProgress(30);
-    let parsedData = await data.json();
-    setProgress(70);
-    setArticles(parsedData.articles);
-    setTotalResults(parsedData.totalResults);
-    setLoading(false);
-    setProgress(100);
+    try {
+      let data = await fetch(url);
+      if (!data.ok) throw new Error(`API Error: ${data.status}`);
+
+      let parsedData = await data.json();
+      setProgress(70);
+
+      setArticles(parsedData.articles || []);
+      setTotalResults(parsedData.totalArticles || 0);
+      setLoading(false);
+      setProgress(100);
+    } catch (error) {
+      console.error("Error fetching news:", error);
+      setArticles([]);
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     document.title = `${capitalizeFirstLetter(category)} - CurrentSpotLight`;
-    updateNews();
-    // eslint-disable-next-line
+    updateNews(); // ✅ Calling updateNews when component mounts
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchMoreData = async () => {
+    const url = `https://gnews.io/api/v4/top-headlines?category=${category}&lang=en&country=${country}&max=${pageSize}&page=${
+      page + 1
+    }&apikey=${apiKey}`;
     try {
-      const url = `https://newsapi.org/v2/top-headlines?country=${country}&category=${category}&apiKey=${apiKey}&page=${
-        page + 1
-      }&pageSize=${pageSize}`;
+      let data = await fetch(url);
+      if (!data.ok) throw new Error(`API Error: ${data.status}`);
+
+      let parsedData = await data.json();
       setPage(page + 1);
-
-      let response = await fetch(url);
-
-      if (!response.ok) throw new Error(`API Error: ${response.status}`);
-
-      let parsedData = await response.json();
-
-      if (!parsedData.articles)
-        throw new Error("No articles received from API");
-
-      setArticles((prevArticles) => [...prevArticles, ...parsedData.articles]);
-      setTotalResults(parsedData.totalResults);
+      setArticles((prevArticles) => [
+        ...prevArticles,
+        ...(parsedData.articles || []),
+      ]);
+      setTotalResults(parsedData.totalArticles || 0);
     } catch (error) {
-      console.error("Error fetching data:", error);
-      setArticles([]); // Prevents crash when articles are undefined
+      console.error("Error fetching more data:", error);
     }
   };
 
@@ -75,22 +80,22 @@ const News = ({
       </h1>
       {loading && <Spinner />}
       <InfiniteScroll
-        dataLength={articles.length}
+        dataLength={articles ? articles.length : 0}
         next={fetchMoreData}
-        hasMore={articles.length !== totalResults}
+        hasMore={articles && articles.length !== totalResults}
         loader={<Spinner />}
       >
         <div className='container'>
           <div className='row'>
-            {articles.map((element) => {
+            {articles.map((element, index) => {
               return (
-                <div className='col-md-4' key={element.url}>
+                <div className='col-md-4' key={index}>
                   <NewsItem
-                    title={element.title ? element.title : ""}
-                    description={element.description ? element.description : ""}
-                    imageUrl={element.urlToImage}
+                    title={element.title || "No Title"}
+                    description={element.description || "No Description"}
+                    imageUrl={element.image}
                     newsUrl={element.url}
-                    author={element.author}
+                    author={element.source.name || "Unknown"}
                     date={element.publishedAt}
                     source={element.source.name}
                   />

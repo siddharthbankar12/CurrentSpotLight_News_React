@@ -22,19 +22,22 @@ const News = ({
 
   const updateNews = async () => {
     setProgress(10);
-    const url = `https://gnews.io/api/v4/top-headlines?category=${category}&lang=en&country=${country}&max=${pageSize}&apikey=${apiKey}`;
-    console.log(url);
+    const url = `http://api.mediastack.com/v1/news?access_key=${apiKey}&countries=${country}&categories=${category}&limit=${pageSize}&offset=${
+      (page - 1) * pageSize
+    }`;
+
+    console.log("Fetching URL:", url);
 
     setLoading(true);
     try {
-      let data = await fetch(url);
-      if (!data.ok) throw new Error(`API Error: ${data.status}`);
+      let response = await fetch(url);
+      if (!response.ok) throw new Error(`API Error: ${response.status}`);
 
-      let parsedData = await data.json();
+      let parsedData = await response.json();
       setProgress(70);
 
-      setArticles(parsedData.articles || []);
-      setTotalResults(parsedData.totalArticles || 0);
+      setArticles(parsedData.data || []);
+      setTotalResults(parsedData.pagination?.total || 0);
       setLoading(false);
       setProgress(100);
     } catch (error) {
@@ -46,25 +49,31 @@ const News = ({
 
   useEffect(() => {
     document.title = `${capitalizeFirstLetter(category)} - CurrentSpotLight`;
-    updateNews(); // ✅ Calling updateNews when component mounts
+    updateNews(); // ✅ Fetch news on component mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchMoreData = async () => {
-    const url = `https://gnews.io/api/v4/top-headlines?category=${category}&lang=en&country=${country}&max=${pageSize}&page=${
-      page + 1
-    }&apikey=${apiKey}`;
-    try {
-      let data = await fetch(url);
-      if (!data.ok) throw new Error(`API Error: ${data.status}`);
+    if (articles.length >= totalResults) {
+      console.log("No more articles to load.");
+      return;
+    }
 
-      let parsedData = await data.json();
+    const url = `http://api.mediastack.com/v1/news?access_key=${apiKey}&countries=${country}&categories=${category}&limit=${pageSize}&offset=${
+      page * pageSize
+    }`;
+
+    try {
+      let response = await fetch(url);
+      if (!response.ok) throw new Error(`API Error: ${response.status}`);
+
+      let parsedData = await response.json();
       setPage(page + 1);
       setArticles((prevArticles) => [
         ...prevArticles,
-        ...(parsedData.articles || []),
+        ...(parsedData.data || []),
       ]);
-      setTotalResults(parsedData.totalArticles || 0);
+      setTotalResults(parsedData.pagination?.total || 0);
     } catch (error) {
       console.error("Error fetching more data:", error);
     }
@@ -80,9 +89,9 @@ const News = ({
       </h1>
       {loading && <Spinner />}
       <InfiniteScroll
-        dataLength={articles ? articles.length : 0}
+        dataLength={articles.length}
         next={fetchMoreData}
-        hasMore={articles && articles.length !== totalResults}
+        hasMore={articles.length < totalResults}
         loader={<Spinner />}
       >
         <div className='container'>
@@ -95,9 +104,9 @@ const News = ({
                     description={element.description || "No Description"}
                     imageUrl={element.image}
                     newsUrl={element.url}
-                    author={element.source.name || "Unknown"}
-                    date={element.publishedAt}
-                    source={element.source.name}
+                    author={element.author || "Unknown"}
+                    date={element.published_at}
+                    source={element.source}
                   />
                 </div>
               );

@@ -42,20 +42,31 @@ const News = ({
   }, []);
 
   const fetchMoreData = async () => {
-    const url = `https://newsapi.org/v2/top-headlines?country=${country}&category=${category}&apiKey=${apiKey}&page=${
-      page + 1
-    }&pageSize=${pageSize}`;
-    setPage(page + 1);
-    let data = await fetch(url);
-    let parsedData = await data.json();
-    setArticles(articles.concat(parsedData.articles));
-    setTotalResults(parsedData.totalResults);
+    try {
+      const url = `https://newsapi.org/v2/top-headlines?country=${country}&category=${category}&apiKey=${apiKey}&page=${
+        page + 1
+      }&pageSize=${pageSize}`;
+      setPage(page + 1);
+      let data = await fetch(url);
+
+      if (!data.ok) throw new Error(`HTTP error! Status: ${data.status}`);
+
+      let parsedData = await data.json();
+
+      if (!parsedData.articles)
+        throw new Error("No articles received from API");
+
+      setArticles((prevArticles) => [...prevArticles, ...parsedData.articles]);
+      setTotalResults(parsedData.totalResults);
+    } catch (error) {
+      console.error("Error fetching more data:", error);
+    }
   };
 
   return (
     <>
       <h1
-        className="text-center"
+        className='text-center'
         style={{ margin: "35px 0px", marginTop: "90px" }}
       >
         CurrentSpotLight - Top {capitalizeFirstLetter(category)} Headlines
@@ -67,11 +78,11 @@ const News = ({
         hasMore={articles.length !== totalResults}
         loader={<Spinner />}
       >
-        <div className="container">
-          <div className="row">
+        <div className='container'>
+          <div className='row'>
             {articles.map((element) => {
               return (
-                <div className="col-md-4" key={element.url}>
+                <div className='col-md-4' key={element.url}>
                   <NewsItem
                     title={element.title ? element.title : ""}
                     description={element.description ? element.description : ""}
